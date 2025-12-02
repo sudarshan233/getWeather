@@ -1,18 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.fetchWeather = void 0;
+exports.fetchCurrent = void 0;
 const openmeteo_1 = require("openmeteo");
-const fetchWeather = async (lat, lon) => {
+const fetchCurrent = async (lat, lon) => {
     const params = {
         latitude: lat,
         longitude: lon,
-        daily: ["temperature_2m_max", "temperature_2m_min", "wind_speed_10m_max",
-            "precipitation_sum", "relative_humidity_2m_max",
-            "relative_humidity_2m_min", "wind_speed_10m_min", "uv_index_max"
-        ],
-        hourly: ["ragweed_pollen", "olive_pollen", "mugwort_pollen", "grass_pollen",
-            "birch_pollen", "alder_pollen"
-        ],
         current: [
             "temperature_2m", "precipitation", "wind_speed_10m", "relative_humidity_2m",
             "alder_pollen", "birch_pollen", "grass_pollen", "mugwort_pollen",
@@ -31,8 +24,6 @@ const fetchWeather = async (lat, lon) => {
         const utcOffsetSeconds = response.utcOffsetSeconds();
         console.log(`\nCoordinates: ${latitude}°N ${longitude}°E`, `\nElevation: ${elevation}m asl`, `\nTimezone difference to GMT+0: ${utcOffsetSeconds}s`);
         const current = response.current();
-        const daily = response.daily();
-        const hourly = response.hourly();
         // Note: The order of weather variables in the URL query and the indices below need to match!
         const weatherData = {
             current: {
@@ -47,26 +38,6 @@ const fetchWeather = async (lat, lon) => {
                 mugwort_pollen: current.variables(3).value(),
                 ragweed_pollen: current.variables(4).value(),
                 olive_pollen: current.variables(5).value(),
-            },
-            hourly: {
-                time: Array.from({ length: (Number(hourly.timeEnd()) - Number(hourly.time())) / hourly.interval() }, (_, i) => new Date((Number(hourly.time()) + i * hourly.interval() + utcOffsetSeconds) * 1000)),
-                ragweed_pollen: hourly.variables(0).valuesArray(),
-                olive_pollen: hourly.variables(1).valuesArray(),
-                mugwort_pollen: hourly.variables(2).valuesArray(),
-                grass_pollen: hourly.variables(3).valuesArray(),
-                birch_pollen: hourly.variables(4).valuesArray(),
-                alder_pollen: hourly.variables(5).valuesArray(),
-            },
-            daily: {
-                time: Array.from({ length: (Number(daily.timeEnd()) - Number(daily.time())) / daily.interval() }, (_, i) => new Date((Number(daily.time()) + i * daily.interval() + utcOffsetSeconds) * 1000)),
-                uv_index_max: daily.variables(0).valuesArray(),
-                temperature_2m_max: daily.variables(1).valuesArray(),
-                temperature_2m_min: daily.variables(2).valuesArray(),
-                wind_speed_10m_max: daily.variables(3).valuesArray(),
-                precipitation_sum: daily.variables(4).valuesArray(),
-                relative_humidity_2m_max: daily.variables(5).valuesArray(),
-                relative_humidity_2m_min: daily.variables(6).valuesArray(),
-                wind_speed_10m_min: daily.variables(7).valuesArray(),
             },
         };
         return {
@@ -85,11 +56,10 @@ const fetchWeather = async (lat, lon) => {
                     olive_pollen: weatherData.current.olive_pollen,
                 }
             },
-            hourly: weatherData.hourly
         };
     }
     catch (error) {
         console.log(error);
     }
 };
-exports.fetchWeather = fetchWeather;
+exports.fetchCurrent = fetchCurrent;
