@@ -2,7 +2,7 @@ import express from "express";
 
 import {
     getCurrentWeather
-} from "../weather.controllers";
+} from "../controllers/weather.controllers";
 
 const router = express.Router();
 

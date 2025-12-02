@@ -6,7 +6,10 @@ const fetchWeather = async (lat, lon) => {
     const params = {
         latitude: lat,
         longitude: lon,
-        daily: "uv_index_max",
+        daily: ["temperature_2m_max", "temperature_2m_min", "wind_speed_10m_max",
+            "precipitation_sum", "relative_humidity_2m_max",
+            "relative_humidity_2m_min", "wind_speed_10m_min", "uv_index_max"
+        ],
         hourly: ["ragweed_pollen", "olive_pollen", "mugwort_pollen", "grass_pollen",
             "birch_pollen", "alder_pollen"
         ],
@@ -57,22 +60,32 @@ const fetchWeather = async (lat, lon) => {
             daily: {
                 time: Array.from({ length: (Number(daily.timeEnd()) - Number(daily.time())) / daily.interval() }, (_, i) => new Date((Number(daily.time()) + i * daily.interval() + utcOffsetSeconds) * 1000)),
                 uv_index_max: daily.variables(0).valuesArray(),
+                temperature_2m_max: daily.variables(1).valuesArray(),
+                temperature_2m_min: daily.variables(2).valuesArray(),
+                wind_speed_10m_max: daily.variables(3).valuesArray(),
+                precipitation_sum: daily.variables(4).valuesArray(),
+                relative_humidity_2m_max: daily.variables(5).valuesArray(),
+                relative_humidity_2m_min: daily.variables(6).valuesArray(),
+                wind_speed_10m_min: daily.variables(7).valuesArray(),
             },
         };
         return {
             timeStamp: weatherData.current.time,
-            currentTemperature: weatherData.current.temperature_2m,
-            currenPrecipitation: weatherData.current.precipitation,
-            currentHumidity: weatherData.current.relative_humidity_2m,
-            currentWindSpeed: weatherData.current.wind_speed_10m,
-            currentPollen: {
-                alder_pollen: weatherData.current.alder_pollen,
-                birch_pollen: weatherData.current.birch_pollen,
-                grass_pollen: weatherData.current.grass_pollen,
-                mugwort_pollen: weatherData.current.mugwort_pollen,
-                ragweed_pollen: weatherData.current.ragweed_pollen,
-                olive_pollen: weatherData.current.olive_pollen,
-            }
+            current: {
+                currentTemperature: weatherData.current.temperature_2m,
+                currenPrecipitation: weatherData.current.precipitation,
+                currentHumidity: weatherData.current.relative_humidity_2m,
+                currentWindSpeed: weatherData.current.wind_speed_10m,
+                currentPollen: {
+                    alder_pollen: weatherData.current.alder_pollen,
+                    birch_pollen: weatherData.current.birch_pollen,
+                    grass_pollen: weatherData.current.grass_pollen,
+                    mugwort_pollen: weatherData.current.mugwort_pollen,
+                    ragweed_pollen: weatherData.current.ragweed_pollen,
+                    olive_pollen: weatherData.current.olive_pollen,
+                }
+            },
+            hourly: weatherData.hourly
         };
     }
     catch (error) {

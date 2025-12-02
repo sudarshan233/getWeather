@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
 
-import {GeoCodesResponse} from "./models/weather.types";
-import {fetchWeather} from "./openmeteo/weather.current";
-import {geoCodes} from "./openmeteo/weather.geocodes";
+import {GeoCodesResponse} from "../models/weather.types";
+import {fetchWeather} from "../openmeteo/weather.current";
+import {geoCodes} from "../openmeteo/weather.geocodes";
 
 export const getCurrentWeather = async (req: Request, res: Response) => {
     const city  = req.query.city as string;

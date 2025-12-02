@@ -14,5 +14,3 @@ export interface GeoCodesResponse {
     "country": string,
     "admin1": string,
 }
-
-export interface WeatherDataResponse {}
