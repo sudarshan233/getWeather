@@ -1,17 +1,24 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.fetchPollenForecast = exports.fetchWeatherForecast = void 0;
+const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config();
 const openmeteo_1 = require("openmeteo");
-const url = "https://api.open-meteo.com/v1/forecast";
+const axios_1 = require("../lib/axios");
 const fetchWeatherForecast = async (lat, lon) => {
     const params = {
         latitude: lat,
         longitude: lon,
-        daily: ["temperature_2m_max", "temperature_2m_min", "wind_speed_10m_max",
-            "precipitation_sum", "relative_humidity_2m_max",
-            "relative_humidity_2m_min", "wind_speed_10m_min", "uv_index_max"
+        daily: ["temperature_2m_max", "temperature_2m_min", "temperature_2m_mean", "wind_speed_10m_max",
+            "wind_speed_10m_min", "wind_speed_10m_mean", "relative_humidity_2m_max", "relative_humidity_2m_min",
+            "relative_humidity_2m_mean", "uv_index_max"
         ],
     };
+    const url = "https://api.open-meteo.com/v1/forecast";
+    const apiKey = process.env.OPEN_WEATHER_API_KEY;
     try {
         const responses = await (0, openmeteo_1.fetchWeatherApi)(url, params);
         // Process first location. Add a for-loop for multiple locations or weather models
@@ -27,18 +34,37 @@ const fetchWeatherForecast = async (lat, lon) => {
         const weatherData = {
             daily: {
                 time: Array.from({ length: (Number(daily.timeEnd()) - Number(daily.time())) / daily.interval() }, (_, i) => new Date((Number(daily.time()) + i * daily.interval() + utcOffsetSeconds) * 1000)),
-                uv_index_max: daily.variables(0).valuesArray(),
-                temperature_2m_max: daily.variables(1).valuesArray(),
-                temperature_2m_min: daily.variables(2).valuesArray(),
+                temperature_2m_max: daily.variables(0).valuesArray(),
+                temperature_2m_min: daily.variables(1).valuesArray(),
+                temperature_2m_mean: daily.variables(2).valuesArray(),
                 wind_speed_10m_max: daily.variables(3).valuesArray(),
-                precipitation_sum: daily.variables(4).valuesArray(),
-                relative_humidity_2m_max: daily.variables(5).valuesArray(),
-                relative_humidity_2m_min: daily.variables(6).valuesArray(),
-                wind_speed_10m_min: daily.variables(7).valuesArray(),
+                wind_speed_10m_min: daily.variables(4).valuesArray(),
+                wind_speed_10m_mean: daily.variables(5).valuesArray(),
+                relative_humidity_2m_max: daily.variables(6).valuesArray(),
+                relative_humidity_2m_min: daily.variables(7).valuesArray(),
+                relative_humidity_2m_mean: daily.variables(8).valuesArray(),
+                uv_index_max: daily.variables(9).valuesArray(),
             },
         };
+        const openWeatherData = await (0, axios_1.PrecipitationApi)(`?lat=${lat}&lon=${lon}&appid=${apiKey}&cnt=7`);
+        const precipitation = openWeatherData.data.list.map((item) => {
+            if (!item.rain)
+                return 0;
+            return item.rain;
+        });
         return {
-            daily: weatherData.daily
+            timestamps: weatherData.daily.time,
+            maxTemperature: weatherData.daily.temperature_2m_max,
+            minTemperature: weatherData.daily.temperature_2m_min,
+            meanTemperature: weatherData.daily.temperature_2m_mean,
+            minWindSpeed: weatherData.daily.wind_speed_10m_min,
+            maxWindSpeed: weatherData.daily.wind_speed_10m_max,
+            meanWindSpeed: weatherData.daily.wind_speed_10m_mean,
+            minHumidity: weatherData.daily.relative_humidity_2m_min,
+            maxHumidity: weatherData.daily.relative_humidity_2m_max,
+            meanHumidity: weatherData.daily.relative_humidity_2m_mean,
+            uvIndex: weatherData.daily.uv_index_max,
+            precipitation: precipitation,
         };
     }
     catch (error) {
@@ -54,6 +80,7 @@ const fetchPollenForecast = async (lat, lon) => {
             "birch_pollen", "alder_pollen"
         ],
     };
+    const url = "https://air-quality-api.open-meteo.com/v1/air-quality";
     try {
         const responses = await (0, openmeteo_1.fetchWeatherApi)(url, params);
         // Process first location. Add a for-loop for multiple locations or weather models
@@ -78,7 +105,13 @@ const fetchPollenForecast = async (lat, lon) => {
             },
         };
         return {
-            hourly: weatherData.hourly
+            timeStamps: weatherData.hourly.time,
+            ragweed_pollen: weatherData.hourly.ragweed_pollen,
+            olive_pollen: weatherData.hourly.olive_pollen,
+            mugwort_pollen: weatherData.hourly.mugwort_pollen,
+            grass_pollen: weatherData.hourly.grass_pollen,
+            birch_pollen: weatherData.hourly.birch_pollen,
+            alder_pollen: weatherData.hourly.alder_pollen,
         };
     }
     catch (error) {
